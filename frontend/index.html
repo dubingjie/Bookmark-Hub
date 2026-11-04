@@ -3,79 +3,262 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bookmark-Hub</title>
+  <title>Bookmark-Hub · 书签收藏</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-<div id="app" class="max-w-5xl mx-auto p-6">
+  <style>
+    :root {
+      --ink: #2c2c2c;        /* 主文字 */
+      --ink-light: #777;     /* 次要文字 */
+      --ink-faint: #aaa;     /* 更弱文字 */
+      --line: #e5e2db;       /* 分隔线，带一点暖灰 */
+      --accent: #8a6d3b;     /* 点缀色：茶金 */
+      --bg: #fdfdfb;         /* 微暖白 */
+      --card: #ffffff;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    a { color: inherit; text-decoration: none; }
 
-  <h1 class="text-2xl font-bold mb-6">📚 Bookmark-Hub</h1>
+    .page { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* ===== 页头 ===== */
+    header { text-align: center; margin-bottom: 48px; }
+    header h1 {
+      font-size: 34px;
+      font-weight: normal;
+      letter-spacing: 6px;
+    }
+    header .sub {
+      color: var(--ink-faint);
+      font-size: 14px;
+      letter-spacing: 3px;
+      margin-top: 6px;
+    }
+    header .rule {
+      width: 64px; height: 1px; background: var(--accent);
+      margin: 20px auto 0;
+    }
+
+    section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 18px;
+      letter-spacing: 3px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-title::after {
+      content: ""; flex: 1; height: 1px; background: var(--line);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    /* ===== 热门榜单 ===== */
+    .top-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .top-item {
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .top-item:hover { box-shadow: 0 4px 14px rgba(0,0,0,.06); transform: translateY(-2px); }
+    .top-rank { color: var(--accent); font-size: 13px; letter-spacing: 1px; }
+    .top-name {
+      margin-top: 4px;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .empty { padding: 20px; text-align: center; color: var(--ink-faint); }
+
+    /* ===== 检索（与列表属同一视觉单元，间距收紧） ===== */
+    .search-bar { display: flex; gap: 12px; margin-bottom: 12px; }
+    .search-bar input { flex: 1; }
+    input, select {
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 9px 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--ink-faint); }
+
+    /* ===== 表单（默认折叠） ===== */
+    .add-toggle {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      text-align: center;
+      letter-spacing: 3px;
+      color: var(--ink-faint);
+      background: transparent;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+      font-family: inherit;
+      font-size: 15px;
+    }
+    .add-toggle:hover { color: var(--accent); border-color: var(--accent); }
+    .form-card { padding: 24px; }
+    .form-title { font-size: 17px; letter-spacing: 2px; margin-bottom: 16px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .form-grid input { width: 100%; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+    button {
+      font-family: inherit;
+      font-size: 15px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      border-radius: var(--radius);
+      padding: 9px 26px;
+      transition: all .2s;
+    }
+    .btn-primary {
+      background: var(--ink); color: #fff; border: 1px solid var(--ink);
+    }
+    .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+    .btn-plain {
+      background: transparent; color: var(--ink-light); border: 1px solid var(--line);
+    }
+    .btn-plain:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+    /* ===== 书签列表 ===== */
+    .bookmark-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      transition: background .15s;
+    }
+    .bookmark-row:last-child { border-bottom: none; }
+    .bookmark-row:hover { background: #faf9f5; }
+    .bm-main { flex: 1; min-width: 0; }
+    .bm-title {
+      font-size: 17px;
+      cursor: pointer;
+      border-bottom: 1px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    .bm-title:hover { color: var(--accent); border-bottom-color: var(--accent); }
+    .bm-visits { font-size: 12px; color: var(--ink-faint); margin-left: 10px; }
+    .bm-url, .bm-remark {
+      font-size: 13px;
+      color: var(--ink-faint);
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .bm-remark { color: var(--ink-light); }
+    .bm-tags { margin-top: 6px; }
+    .tag-chip {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--accent);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 1px 12px;
+      margin-right: 6px;
+      background: #fbfaf7;
+    }
+    .bm-actions { flex-shrink: 0; }
+    .bm-actions button {
+      background: none; border: none;
+      font-size: 14px; letter-spacing: 1px;
+      color: var(--ink-faint);
+      padding: 4px 8px;
+    }
+    .bm-actions button:hover { color: var(--accent); }
+    .bm-actions .danger:hover { color: #b5433a; }
+  </style>
+</head>
+<body>
+<div id="app" class="page">
+
+  <header>
+    <h1>书签集</h1>
+    <div class="sub">BOOKMARK · HUB</div>
+    <div class="rule"></div>
+  </header>
 
   <!-- ===== 热门 Top 10 ===== -->
-  <section class="mb-8">
-    <h2 class="text-lg font-semibold mb-3">🔥 热门 Top 10</h2>
-    <div v-if="top.length === 0" class="bg-white rounded shadow p-4 text-gray-400">
-      暂无访问数据，点击书签后开始统计
-    </div>
-    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <a v-for="(b, i) in top" :key="b.id" @click.prevent="openBookmark(b)"
-         class="bg-white rounded shadow p-3 hover:shadow-md cursor-pointer block">
-        <div class="text-xs text-orange-500 font-bold">#{{ i + 1 }} · {{ b.visits }} 次</div>
-        <div class="font-medium truncate" :title="b.title">{{ b.title }}</div>
-      </a>
+  <section>
+    <h2 class="section-title">热门排行</h2>
+    <div v-if="top.length === 0" class="card empty">暂无访问数据，点击书签后开始统计</div>
+    <div v-else class="top-grid">
+      <div v-for="(b, i) in top" :key="b.id" @click="openBookmark(b)"
+           class="card top-item">
+        <div class="top-rank">№ {{ i + 1 }} · {{ b.visits }} 次</div>
+        <div class="top-name" :title="b.title">{{ b.title }}</div>
+      </div>
     </div>
   </section>
 
-  <!-- ===== 检索区 ===== -->
-  <section class="bg-white rounded shadow p-4 mb-6 flex gap-3">
-    <input v-model="keyword" @input="loadBookmarks"
-           placeholder="搜索标题 / 备注..."
-           class="border rounded px-3 py-2 flex-1">
-    <select v-model="selectedTag" @change="loadBookmarks" class="border rounded px-3 py-2">
-      <option value="">全部标签</option>
-      <option v-for="t in tags" :key="t.id" :value="t.id">
-        {{ t.name }} ({{ t.bookmark_count }})
-      </option>
-    </select>
-  </section>
-
-  <!-- ===== 新增 / 编辑表单 ===== -->
-  <section class="bg-white rounded shadow p-4 mb-6">
-    <h2 class="font-semibold mb-3">{{ editingId ? '编辑书签' : '新增书签' }}</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-      <input v-model="form.title" placeholder="标题 *" class="border rounded px-3 py-2">
-      <input v-model="form.url" placeholder="网址 *（可省略 https://）" class="border rounded px-3 py-2">
-      <input v-model="form.remark" placeholder="备注" class="border rounded px-3 py-2">
-      <input v-model="form.tagsInput" placeholder="标签，用逗号分隔（新标签自动创建）"
-             class="border rounded px-3 py-2">
+  <!-- ===== 检索 + 书签列表（同一视觉单元） ===== -->
+  <section>
+    <div class="search-bar">
+      <input v-model="keyword" @input="loadBookmarks" placeholder="搜索标题或备注 …">
+      <select v-model="selectedTag" @change="loadBookmarks">
+        <option value="">全部标签</option>
+        <option v-for="t in tags" :key="t.id" :value="t.id">
+          {{ t.name }}（{{ t.bookmark_count }}）
+        </option>
+      </select>
     </div>
-    <button @click="saveBookmark"
-            class="bg-blue-500 text-white rounded px-4 py-2 hover:bg-blue-600 mr-2">
-      {{ editingId ? '保存修改' : '添加' }}
-    </button>
-    <button v-if="editingId" @click="resetForm"
-            class="bg-gray-300 rounded px-4 py-2 hover:bg-gray-400">取消</button>
-  </section>
-
-  <!-- ===== 书签列表 ===== -->
-  <section class="bg-white rounded shadow">
-    <div v-if="bookmarks.length === 0" class="p-4 text-gray-400">没有匹配的书签</div>
-    <div v-for="b in bookmarks" :key="b.id"
-         class="flex items-center gap-3 p-4 border-b last:border-b-0 hover:bg-gray-50">
-      <div class="flex-1 min-w-0">
-        <a @click.prevent="openBookmark(b)"
-           class="font-medium text-blue-600 hover:underline cursor-pointer">{{ b.title }}</a>
-        <span class="text-xs text-gray-400 ml-2">{{ b.visits }} 次访问</span>
-        <div class="text-sm text-gray-500 truncate">{{ b.url }}</div>
-        <div v-if="b.remark" class="text-sm text-gray-400 truncate">{{ b.remark }}</div>
-        <div class="mt-1">
-          <span v-for="t in b.tags" :key="t.id"
-                class="inline-block bg-blue-100 text-blue-600 text-xs rounded px-2 py-0.5 mr-1">{{ t.name }}</span>
+    <div class="card">
+      <div v-if="bookmarks.length === 0" class="empty">没有匹配的书签</div>
+      <div v-for="b in bookmarks" :key="b.id" class="bookmark-row">
+        <div class="bm-main">
+          <span class="bm-title" @click="openBookmark(b)">{{ b.title }}</span>
+          <span class="bm-visits">{{ b.visits }} 次访问</span>
+          <div class="bm-url">{{ b.url }}</div>
+          <div v-if="b.remark" class="bm-remark">{{ b.remark }}</div>
+          <div v-if="b.tags.length" class="bm-tags">
+            <span v-for="t in b.tags" :key="t.id" class="tag-chip">{{ t.name }}</span>
+          </div>
+        </div>
+        <div class="bm-actions">
+          <button @click="startEdit(b)">编辑</button>
+          <button @click="removeBookmark(b)" class="danger">删除</button>
         </div>
       </div>
-      <button @click="startEdit(b)" class="text-sm text-gray-500 hover:text-blue-500">编辑</button>
-      <button @click="removeBookmark(b)" class="text-sm text-gray-500 hover:text-red-500">删除</button>
+    </div>
+  </section>
+
+  <!-- ===== 新增 / 编辑表单（默认折叠） ===== -->
+  <section ref="formSection">
+    <button v-if="!formOpen" @click="openForm" class="add-toggle">＋ 收录新书签</button>
+    <div v-else class="card form-card">
+      <div class="form-title">{{ editingId ? '编辑书签' : '收录新书签' }}</div>
+      <div class="form-grid">
+        <input v-model="form.title" placeholder="标题 *">
+        <input v-model="form.url" placeholder="网址 *（可省略 https://）">
+        <input v-model="form.remark" placeholder="备注">
+        <input v-model="form.tagsInput" placeholder="标签，逗号分隔（新标签自动创建）">
+      </div>
+      <button @click="saveBookmark" class="btn-primary">
+        {{ editingId ? '保存修改' : '收录' }}
+      </button>
+      <button @click="resetForm" class="btn-plain">取消</button>
     </div>
   </section>
 
@@ -93,6 +276,7 @@ createApp({
       keyword: '',
       selectedTag: '',
       editingId: null,
+      formOpen: false,   // 表单默认折叠
       form: { title: '', url: '', remark: '', tagsInput: '' },
       lastVisit: {},   // { 书签id: 上次点击时间戳 }，用于 2 秒防抖
     };
@@ -125,6 +309,9 @@ createApp({
       // 计数已变化，稍后刷新榜单和列表
       setTimeout(() => { this.loadTop(); this.loadBookmarks(); }, 1000);
     },
+    openForm() {
+      this.formOpen = true;
+    },
     async saveBookmark() {
       if (!this.form.title.trim() || !this.form.url.trim()) {
         alert('标题和网址不能为空');
@@ -154,7 +341,11 @@ createApp({
         remark: b.remark || '',
         tagsInput: b.tags.map(t => t.name).join(', '),
       };
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 展开表单并滚动过去，等 DOM 更新后再滚
+      this.formOpen = true;
+      this.$nextTick(() => {
+        this.$refs.formSection.scrollIntoView({ behavior: 'smooth' });
+      });
     },
     async removeBookmark(b) {
       if (!confirm(`确认删除「${b.title}」？`)) return;
@@ -163,6 +354,7 @@ createApp({
     },
     resetForm() {
       this.editingId = null;
+      this.formOpen = false;
       this.form = { title: '', url: '', remark: '', tagsInput: '' };
     },
   },
