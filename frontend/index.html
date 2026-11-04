@@ -100,24 +100,16 @@
     input:focus, select:focus { border-color: var(--accent); }
     input::placeholder { color: var(--ink-faint); }
 
-    /* ===== 表单（默认折叠） ===== */
-    .add-toggle {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      text-align: center;
-      letter-spacing: 3px;
-      color: var(--ink-faint);
-      background: transparent;
-      border: 1px dashed var(--line);
-      border-radius: var(--radius);
-      cursor: pointer;
-      transition: color .2s, border-color .2s;
-      font-family: inherit;
-      font-size: 15px;
+    /* ===== 表单（默认折叠，在搜索栏下方就地展开） ===== */
+    .add-btn {
+      flex-shrink: 0;
+      padding: 9px 18px;
+      color: var(--ink-light);
+      border: 1px solid var(--line);
+      background: var(--card);
     }
-    .add-toggle:hover { color: var(--accent); border-color: var(--accent); }
-    .form-card { padding: 24px; }
+    .add-btn:hover { color: var(--ink); border-color: var(--ink-faint); }
+    .form-card { padding: 24px; margin-bottom: 12px; }
     .form-title { font-size: 17px; letter-spacing: 2px; margin-bottom: 16px; }
     .form-grid {
       display: grid;
@@ -214,7 +206,7 @@
     </div>
   </section>
 
-  <!-- ===== 检索 + 书签列表（同一视觉单元） ===== -->
+  <!-- ===== 检索 + 收录 + 书签列表（同一视觉单元） ===== -->
   <section>
     <div class="search-bar">
       <input v-model="keyword" @input="loadBookmarks" placeholder="搜索标题或备注 …">
@@ -224,7 +216,24 @@
           {{ t.name }}（{{ t.bookmark_count }}）
         </option>
       </select>
+      <button @click="toggleForm" class="add-btn">{{ formOpen ? '收起' : '＋ 收录' }}</button>
     </div>
+
+    <!-- 新增 / 编辑表单（默认折叠，就地展开） -->
+    <div v-if="formOpen" class="card form-card" ref="formSection">
+      <div class="form-title">{{ editingId ? '编辑书签' : '收录新书签' }}</div>
+      <div class="form-grid">
+        <input v-model="form.title" placeholder="标题 *">
+        <input v-model="form.url" placeholder="网址 *（可省略 https://）">
+        <input v-model="form.remark" placeholder="备注">
+        <input v-model="form.tagsInput" placeholder="标签，逗号分隔（新标签自动创建）">
+      </div>
+      <button @click="saveBookmark" class="btn-primary">
+        {{ editingId ? '保存修改' : '收录' }}
+      </button>
+      <button @click="resetForm" class="btn-plain">取消</button>
+    </div>
+
     <div class="card">
       <div v-if="bookmarks.length === 0" class="empty">没有匹配的书签</div>
       <div v-for="b in bookmarks" :key="b.id" class="bookmark-row">
@@ -242,24 +251,6 @@
           <button @click="removeBookmark(b)" class="danger">删除</button>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ===== 新增 / 编辑表单（默认折叠） ===== -->
-  <section ref="formSection">
-    <button v-if="!formOpen" @click="openForm" class="add-toggle">＋ 收录新书签</button>
-    <div v-else class="card form-card">
-      <div class="form-title">{{ editingId ? '编辑书签' : '收录新书签' }}</div>
-      <div class="form-grid">
-        <input v-model="form.title" placeholder="标题 *">
-        <input v-model="form.url" placeholder="网址 *（可省略 https://）">
-        <input v-model="form.remark" placeholder="备注">
-        <input v-model="form.tagsInput" placeholder="标签，逗号分隔（新标签自动创建）">
-      </div>
-      <button @click="saveBookmark" class="btn-primary">
-        {{ editingId ? '保存修改' : '收录' }}
-      </button>
-      <button @click="resetForm" class="btn-plain">取消</button>
     </div>
   </section>
 
@@ -310,8 +301,8 @@ createApp({
       // 计数已变化，稍后刷新榜单和列表
       setTimeout(() => { this.loadTop(); this.loadBookmarks(); }, 1000);
     },
-    openForm() {
-      this.formOpen = true;
+    toggleForm() {
+      this.formOpen = !this.formOpen;   // 收起不会清空已填内容，方便临时收起再回来
     },
     async saveBookmark() {
       if (!this.form.title.trim() || !this.form.url.trim()) {
