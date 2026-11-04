@@ -275,7 +275,7 @@
     <div v-else class="top-grid">
       <div v-for="(b, i) in top" :key="b.id" @click="openBookmark(b)"
            class="card top-item">
-        <div class="top-rank">№ {{ i + 1 }} · {{ b.visits }} 次</div>
+        <div class="top-rank">No.{{ i + 1 }}&nbsp;&nbsp;访问 {{ b.visits }} 次</div>
         <div class="top-name" :title="b.title">{{ b.title }}</div>
       </div>
     </div>
