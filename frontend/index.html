@@ -5,46 +5,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bookmark-Hub · 书签收藏</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-gb-web@latest/lxgwwenkaigb-regular/result.css">
   <style>
     :root {
-      --ink: #2c2c2c;        /* 主文字 */
-      --ink-light: #777;     /* 次要文字 */
-      --ink-faint: #aaa;     /* 更弱文字 */
-      --line: #ddd8cb;       /* 分隔线，带一点暖灰 */
-      --accent: #8a6d3b;     /* 点缀色：茶金 */
-      --bg: #f4f1ea;         /* 暖米色背景，与白色卡片拉开层次 */
-      --card: #ffffff;
-      --radius: 6px;
+      --ink: #2D2B28;            /* 主文字 */
+      --ink-light: #6B6560;      /* 次要文字 */
+      --ink-faint: #9B9490;      /* 更弱文字 */
+      --line: #E5E0D8;           /* 边框/分隔线 */
+      --line-light: #EEEAE4;
+      --accent: #DA7756;         /* 点缀色：暖赭 */
+      --accent-hover: #C4684A;
+      --bg: #FAF9F7;             /* 暖纸白 */
+      --card: #FFFFFF;
+      --card-hover: #FDF8F4;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02);
+      --shadow-hover: 0 4px 12px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.03);
+      --grid-color: rgba(218, 119, 86, .07);
+      --grid-color-strong: rgba(218, 119, 86, .12);
+      --grid-size: 24px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
       color: var(--ink);
-      font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
+      font-family: "LXGW WenKai GB", "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
       font-size: 16px;
       line-height: 1.7;
+      background-color: var(--bg);
+      /* 双层方格纸纹理：细格 24px + 粗格 96px，随页面固定 */
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+        linear-gradient(var(--grid-color-strong) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color-strong) 1px, transparent 1px);
+      background-size:
+        var(--grid-size) var(--grid-size),
+        var(--grid-size) var(--grid-size),
+        calc(var(--grid-size) * 4) calc(var(--grid-size) * 4),
+        calc(var(--grid-size) * 4) calc(var(--grid-size) * 4);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
     }
     a { color: inherit; text-decoration: none; }
 
-    .page { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 40px;
+      display: grid;
+      grid-template-columns: 154px 1fr;
+      gap: 70px;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .page { grid-template-columns: 1fr; padding: 24px; }
+      .profile { position: static !important; }
+    }
 
-    /* ===== 页头 ===== */
-    header { text-align: center; margin-bottom: 48px; }
-    header h1 {
-      font-size: 34px;
-      font-weight: normal;
-      letter-spacing: 6px;
+    /* ===== 左侧个人简介栏（参考 dubingjie.xyz 侧栏） ===== */
+    .profile {
+      position: sticky;
+      top: 40px;
     }
-    header .sub {
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .identity .name { font-size: 19px; letter-spacing: 2px; }
+    .identity .caption {
       color: var(--ink-faint);
+      font-size: 11px;
+      letter-spacing: .12em;
+      margin-top: 4px;
+    }
+    .profile .bio {
+      font-size: 13px;
+      color: var(--ink-light);
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .profile .links { display: flex; flex-direction: column; gap: 6px; }
+    .profile .links a {
+      padding: 10px 12px;
       font-size: 14px;
-      letter-spacing: 3px;
-      margin-top: 6px;
+      color: var(--ink-light);
+      border-radius: 7px;
+      transition: background .2s, color .2s;
     }
-    header .rule {
-      width: 64px; height: 1px; background: var(--accent);
-      margin: 20px auto 0;
-    }
+    .profile .links a:hover { background: var(--card-hover); color: var(--accent); }
 
     section { margin-bottom: 40px; }
     .section-title {
@@ -59,9 +119,9 @@
 
     .card {
       background: var(--card);
-      border: 1px solid var(--line);
+      border: 1px solid var(--line-light);
       border-radius: var(--radius);
-      box-shadow: 0 1px 4px rgba(60, 50, 30, .05);
+      box-shadow: var(--shadow);
     }
 
     /* ===== 热门榜单 ===== */
@@ -75,7 +135,7 @@
       cursor: pointer;
       transition: box-shadow .2s, transform .2s;
     }
-    .top-item:hover { box-shadow: 0 4px 14px rgba(0,0,0,.06); transform: translateY(-2px); }
+    .top-item:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
     .top-rank { color: var(--accent); font-size: 13px; letter-spacing: 1px; }
     .top-name {
       margin-top: 4px;
@@ -95,9 +155,12 @@
       border-radius: var(--radius);
       padding: 9px 14px;
       outline: none;
-      transition: border-color .2s;
+      transition: border-color .2s, box-shadow .2s;
     }
-    input:focus, select:focus { border-color: var(--accent); }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(218, 119, 86, .12);
+    }
     input::placeholder { color: var(--ink-faint); }
 
     /* ===== 表单（默认折叠，在搜索栏下方就地展开） ===== */
@@ -108,7 +171,7 @@
       border: 1px solid var(--line);
       background: var(--card);
     }
-    .add-btn:hover { color: var(--ink); border-color: var(--ink-faint); }
+    .add-btn:hover { color: var(--accent); border-color: var(--accent); }
     .form-card { padding: 24px; margin-bottom: 12px; }
     .form-title { font-size: 17px; letter-spacing: 2px; margin-bottom: 16px; }
     .form-grid {
@@ -130,9 +193,9 @@
       transition: all .2s;
     }
     .btn-primary {
-      background: var(--ink); color: #fff; border: 1px solid var(--ink);
+      background: var(--accent); color: #fff; border: 1px solid var(--accent);
     }
-    .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
     .btn-plain {
       background: transparent; color: var(--ink-light); border: 1px solid var(--line);
     }
@@ -142,11 +205,11 @@
     .bookmark-row {
       display: flex; align-items: center; gap: 16px;
       padding: 18px 22px;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--line-light);
       transition: background .15s;
     }
     .bookmark-row:last-child { border-bottom: none; }
-    .bookmark-row:hover { background: #faf9f5; }
+    .bookmark-row:hover { background: var(--card-hover); }
     .bm-main { flex: 1; min-width: 0; }
     .bm-title {
       font-size: 17px;
@@ -167,11 +230,11 @@
       display: inline-block;
       font-size: 12px;
       color: var(--accent);
-      border: 1px solid var(--line);
+      border: 1px solid var(--line-light);
       border-radius: 999px;
       padding: 1px 12px;
       margin-right: 6px;
-      background: #fbfaf7;
+      background: var(--card-hover);
     }
     .bm-actions { flex-shrink: 0; }
     .bm-actions button {
@@ -187,11 +250,23 @@
 <body>
 <div id="app" class="page">
 
-  <header>
-    <h1>书签集</h1>
-    <div class="sub">BOOKMARK · HUB</div>
-    <div class="rule"></div>
-  </header>
+  <!-- ===== 左侧个人简介 ===== -->
+  <aside class="profile">
+    <div class="identity">
+      <div class="avatar">书</div>
+      <div>
+        <div class="name">书签集</div>
+        <div class="caption">BOOKMARK · HUB</div>
+      </div>
+    </div>
+    <p class="bio">个人书签收藏夹，收录常用的开发文档与工具站点。</p>
+    <nav class="links">
+      <a href="https://github.com/dubingjie" target="_blank" rel="noopener">GitHub · dubingjie</a>
+      <a href="https://dubingjie.xyz" target="_blank" rel="noopener">博客 · dubingjie.xyz</a>
+    </nav>
+  </aside>
+
+  <main>
 
   <!-- ===== 热门 Top 10 ===== -->
   <section>
@@ -253,6 +328,8 @@
       </div>
     </div>
   </section>
+
+  </main>
 
 </div>
 
