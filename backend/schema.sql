@@ -1,0 +1,29 @@
+-- Bookmark-Hub 数据库表结构
+USE bookmark_db;
+
+-- 1. 书签表
+CREATE TABLE IF NOT EXISTS bookmarks (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL COMMENT '书签标题',
+    url VARCHAR(1024) NOT NULL COMMENT '目标网址',
+    remark TEXT NULL COMMENT '备注/说明',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='书签数据表';
+
+-- 2. 标签表
+CREATE TABLE IF NOT EXISTS tags (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE COMMENT '标签名（全局唯一）',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签表';
+
+-- 3. 书签-标签关联中间表（多对多）
+CREATE TABLE IF NOT EXISTS bookmark_tags (
+    bookmark_id INT UNSIGNED NOT NULL,
+    tag_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (bookmark_id, tag_id),
+    CONSTRAINT fk_bt_bookmark FOREIGN KEY (bookmark_id) REFERENCES bookmarks(id) ON DELETE CASCADE,
+    CONSTRAINT fk_bt_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='书签-标签多对多关联表';
