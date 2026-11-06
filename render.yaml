@@ -1,0 +1,25 @@
+# Render 蓝图：在 Render 控制台选 New → Blueprint 指向本仓库即可自动创建服务
+services:
+  - type: web
+    name: bookmark-hub
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_SSL
+        value: "true"          # Aiven 强制 SSL
+      - key: DB_HOST           # 以下 sync:false 的项在创建时由你在控制台填写
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false            # Aiven 默认库名是 defaultdb
+      - key: REDIS_URL
+        sync: false            # Upstash 的 rediss:// 完整连接串
